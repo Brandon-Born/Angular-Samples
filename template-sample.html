@@ -1,0 +1,256 @@
+<div id="portal" class="container">
+
+    <div class="user-actions" ng-init="tab = 'profile'">
+
+        <div ng-show="!user.active" class="alert alert-danger">
+            Your subscription has expired, until you <a href="#/subscriptions">renew</a> cannot take create courses. <br />
+            <a href="#/subscriptions">Please go to the subscriptions page to renew your subscription</a>.
+        </div>
+
+        <ul class="nav nav-tabs" role="tablist">
+            <li ng-class="{'active' : tab == 'profile'}"><a ng-click="tab = 'profile'">Your Profile</a></li>
+            <li ng-class="{'active' : tab == 'courses'}"><a ng-click="tab = 'courses'">Your Courses</a></li>
+        </ul>
+
+        <br/>
+
+        <div ng-show="tab == 'profile'" style="width: 90%; margin: 0 auto;">
+            <!-- user information -->
+            <div class="col-md-6 profile-wrapper" ng-class="{'editing' : editing }">
+                <div class="account-wrapper">
+                    <h4>{{'portal_account' | translate}}</h4>
+                    <dl class="dl-horizontal">
+                        <!-- name -->
+                        <dt>{{'account_name' | translate}}</dt>
+                        <dd>
+                            <span ng-show="!editing">{{user.name}}</span>
+                            <span ng-show="editing">
+                                <input type="name" ng-model="user.name" class="form-control" />
+                            </span>
+                        </dd>
+    
+                        <!-- email -->
+                        <dt>{{'account_email' | translate}}</dt>
+                        <dd>
+                            <span ng-show="!editing">{{user.email}}</span>
+                            <span ng-show="editing">
+                                <input class="form-control" type="name" ng-model="user.email" />
+                            </span>
+                        </dd>
+    
+                        <!-- State -->
+                        <dt>{{'account_state' | translate}}</dt>
+                        <dd>
+                            <span ng-show="!editing">{{stateLabel}} &nbsp;</span> <!-- space required for null state values -->
+                            <span ng-show="editing">
+                                <select class="form-control" ng-model="user.state" ng-options="state.code as state.name for state in states"></select>
+                            </span>
+                        </dd>
+    
+                        <!-- Zip -->
+                        <dt>{{'account_zip' | translate}}</dt>
+                        <dd>
+                            <span ng-show="!editing">{{user.zip}} &nbsp;</span> <!-- space required for null zip values -->
+                            <span ng-show="editing">
+                                <input class="form-control" type="name" ng-model="user.zip" />
+                            </span>
+                        </dd>
+    
+                        <dt></dt>
+                        <dd>
+                            <a ng-show="!editing" ng-click="editProfile()" class="btn btn-info">Edit Account</a>
+                            <a ng-show="editing" async-button pending="{{isSubmitting}}" ng-click="saveProfile()" class="btn btn-primary" ng-disabled="!(user.name && user.email && user.state && user.zip)">{{'form_save' | translate}}</a>
+                            <a ng-show="editing" ng-click="cancelEdit()" class="btn">{{'form_cancel' | translate}}</a>
+                        </dd>
+                    </dl>
+    
+                    <!-- username error -->
+                    <div class="alert alert-danger" style="margin: 1em 0;" ng-show="usernameError">
+                        <span class="glyphicon glyphicon-warning-sign"></span>
+                        This email address is already in use by another account.
+                        Please choose a different email address and try again.
+                    </div>
+                </div>
+
+                <div class="referral-wrapper">
+                    <h4>{{'portal_referral' | translate}}</h4>
+                    <strong>{{'portal_referral_code' | translate}} {{user.referral}}</strong>
+    
+                    <div>
+                        <small>
+                            When you refer a friend an additional <strong>year</strong> will be added to your subscription, 
+                            and they will receive 15% off their subscription.
+                        </small>
+                    </div>
+                    
+                    <dl class="dl-horizontal">
+                        <dt></dt>
+                        <dd style="text-align: center">
+                            <strong>Send a Referral</strong>
+                        </dd>
+                        <dt style="padding-top: 12px;">{{'account_email' | translate}}</dt>
+                        <dd>
+                            <input type="email" ng-model="referral.email" class="form-control" placeholder="Refer a friend" />
+                        </dd>
+                        <dt style="padding-top: 22px;">{{'portal_referral_message' | translate}}</dt>
+                        <dd>
+                            <textarea type="name" ng-model="referral.message" class="form-control" placeholder="Add a message (optional)" />
+                        </dd>
+                        <dt></dt>
+                        <dd>
+                            <a ng-disabled="!(referral.email)" async-button pending="{{referral.status == 'pending'}}" ng-click="submitReferral()" class="btn btn-info">{{'portal_referral_submit' | translate}}</a>
+                        </dd>
+                    </dl>
+                    <div ng-show="referral.status == 'success'" class="alert alert-success">
+                        <span class="glyphicon glyphicon-ok"></span>
+                        <strong>Referral email sent.</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-md-6 subscription-wrapper">
+
+                <!-- User Subscription -->
+                <h4>{{'portal_subscription' | translate}}</h4>
+                <dl class="dl-horizontal subscription-details">
+                    <!-- subscription type -->
+                    <dt>{{'subscription_name' | translate}}</dt>
+                    <dd translate="{{'subscription_title_' + user.subscription.type.key}}"></dd>
+
+                    <!-- expiration -->
+                    <dt>{{'subscription_expiration' | translate}}</dt>
+                    <dd id="expiration-date">{{user.subscription.expiration | dateString:'longDate'}}</dd>
+                </dl>
+
+                <!-- User Password -->
+                <div class="password-wrapper">
+                    <h4>{{'portal_password_title' | translate}}</h4>
+                    <a class="btn btn-info" ng-click="editPassword()" ng-show="password.status == '' && !password.success">{{'portal_password_edit' | translate}}</a>
+    
+                    <!-- Password Edit -->
+                    <form ng-submit="submitPasswordChange()" ng-show="password.status != '' && !password.success">
+                        <div class="editing">
+                            <dl class="dl-horizontal">
+                                <dt>{{'account_password' | translate}}</dt>
+                                <dd><input class="form-control" type="password" required placeholder="{{'portal_password_current' | translate}}" autocomplete="off"	 name="currentPassword" ng-model="password.currentPassword" /></dd>
+    
+                                <dt></dt>
+                                <dd><input class="form-control" type="password" required placeholder="{{'portal_password_new' | translate}}" autocomplete="off" name="newPassword" ng-model="password.newPassword" /></dd>
+    
+                                <dt></dt>
+                                <dd><input class="form-control" type="password" required placeholder="{{'portal_password_confirm' | translate}}" autocomplete="off" name="passwordConfirmation" ng-model="password.passwordConfirmation" /></dd>
+    
+                                <dt></dt>
+                                <dd>
+                                    <button async-button pending="{{isSubmitting}}" type="submit" class="btn btn-primary" ng-disabled="!(password.currentPassword && password.newPassword && password.passwordConfirmation)">{{'form_save' | translate}}</button>
+                                    <a ng-click="cancelEditPassword()" class="btn">{{'form_cancel' | translate}}</a>
+                                </dd>
+                            </dl>
+                        </div>
+                    </form>
+    
+                    <div ng-show="password.success" id="quiz-pass" class="alert alert-success">
+                        <span class="glyphicon glyphicon-ok"></span>
+                        <strong>Your password has been changed.</strong>
+                    </div>
+                </div>
+
+                <!-- Current Users -->
+                <div ng-if="subscriptionMeta.users.length > 1">
+                    <h4>{{'portal_users_title' | translate}}</h4>
+                    <!-- TODO : Use filter to filter out current user -->
+                    <div ng-repeat="subscriptionUser in subscriptionMeta.users" ng-if="subscriptionUser.id !== user.id">
+                        {{subscriptionUser.name}} ({{subscriptionUser.email}})
+                    </div>
+                </div>
+
+                <!-- Current Invitations -->
+                <div ng-if="subscriptionMeta.invitations.length > 0">
+                    <h4>{{'portal_invitations_title' | translate}}</h4>
+                    <div ng-repeat="invitation in subscriptionMeta.invitations">
+                        {{invitation.email}}
+                        <a ng-click="cancelInvitation(invitation)" class="pull-right">{{'portal_invitations_cancel' | translate}}</a>
+                        <br/>
+                        <span style="color: #888888">Sent on {{invitation.created | dateString:'short'}}</span>
+
+                    </div>
+                </div>
+
+                <!-- Send Invite -->
+                <div ng-if="subscriptionMeta.loaded && availableUsers > 0 && user.active" class="user-invites">
+                    <h4>{{'portal_invite_title' | translate}} <span>({{availableUsers}} {{'portal_invite_remaining' | translate}})</span></h4>
+                    <form ng-submit="sendInvite()" name="inviteForm" novalidate="" class="form-horizontal">
+                        <div class="control-group">
+                            <label class="control-label" for="new-email">{{'account_email' | translate}}</label>
+                            <div class="controls">
+                                <input type="email" id="new-email" ng-model="requests.inviteEmail" required placeholder="{{'portal_invite_email' | translate}}" />
+                                <button ng-disabled="inviteForm.$invalid" async-button pending="{{isSubmitting}}" type="submit" class="btn btn-primary input-match">{{'portal_invite_send' | translate}}</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="clearfix"></div>
+
+        <div ng-show="tab == 'courses'" style="width: 90%; margin: 0 auto;">
+            <div class="courses">
+                <table ng-show="courses.length > 0" id="courses-list" class="table table-striped ">
+                    <colgroup>
+                        <col>
+                        <col width="70">
+                        <col width="120">
+                        <col width="110">
+                        <col width="150">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Credits</th>
+                            <th>Last Viewed</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="item in courses">
+                            <td>{{item.course.label}}</td>
+                            <td>{{item.course.credits}}</td>
+                            <td>{{item.modified | dateString:'mediumDate'}}</td>
+                            <td>
+                                <span ng-if="item.dateCompleted">
+                                    Completed <br>
+                                    <span class="small">({{item.dateCompleted | dateString:'mediumDate'}})</span>
+                                </span>
+                                <span ng-if="!item.dateCompleted">
+                                    In Progress
+                                </span>
+                            </td>
+                            <td>
+                                <a class="btn btn-primary" href="#/courses/{{item.course.id}}" ng-if="!item.dateCompleted">Continue Course</a>
+                                <a ng-click="printCertificate(item.id)" class="btn btn-primary" ng-if="item.dateCompleted">Print Certificate</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div ng-show="courses.length == 0 && !courses.error" class="alert alert-info">
+                    You haven't taken any courses yet! <strong><a href="#/courses">Click here</a></strong> to get started.
+                </div>
+                <div ng-show="courses.error" class="alert alert-danger">
+                    <span class="glyphicon glyphicon-warning-sign"></span>
+                    We were unable to find your courses, please try again.
+                </div>
+                <p ng-show="courses.length != 0" style="font-size: .9em">
+                    <strong>Having trouble with certificates?</strong>
+                    Please make sure your browser's pop up blocker is disabled.
+                </p>
+                <a ng-show="courses.length != 0" href="#/courses">View available courses</a>
+                <a href="#/certificate"  class="pull-right btn btn-primary" ng-if="courses.length > 1">Print Multi-Course Certificate</a>
+            </div>
+        </div>
+		<br/>
+
+    </div>
+</div>
